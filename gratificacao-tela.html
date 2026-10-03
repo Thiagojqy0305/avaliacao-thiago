@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gratificação (opcional)</title>
+<style>
+  :root{
+    --bg:#fbf7ef;
+    --card:#ffffff;
+    --ink:#1f2937;
+    --muted:#6b7280;
+    --gold:#f0b429;
+    --gold-strong:#d99a00;
+    --gold-soft:#fff6e0;
+    --line:#eee3cf;
+    --radius:18px;
+    --shadow:0 10px 30px rgba(31,41,55,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(900px 500px at 50% -10%, #fff4dd 0%, transparent 62%),
+      var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:22px 16px 44px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{width:100%;max-width:480px}
+
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:14px;letter-spacing:.02em;color:#4b4b4b}
+  .brand .dot{width:26px;height:26px;border-radius:50%;background:linear-gradient(180deg,#ffd76a,#f0b429);display:grid;place-items:center;font-size:13px}
+  .badge{
+    font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+    color:#8a6100;background:var(--gold-soft);border:1px solid #f6e2b0;
+    padding:5px 10px;border-radius:999px;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    padding:22px 20px;
+  }
+
+  .step{display:none}
+  .step.active{display:block;animation:fade .3s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+  h1{font-size:21px;line-height:1.28;margin:0 0 10px;letter-spacing:-.01em}
+  h2{font-size:18px;margin:0 0 6px;letter-spacing:-.01em}
+  p.lead{margin:0;color:var(--muted);font-size:14.5px;line-height:1.55}
+
+  .quote{
+    margin:16px 0 4px;padding:13px 14px;border-left:3px solid var(--gold);
+    background:var(--gold-soft);border-radius:10px;
+    font-size:14px;line-height:1.55;color:#5c4a1c;
+  }
+
+  .section-label{
+    display:flex;align-items:center;gap:8px;
+    margin:22px 0 10px;font-size:12px;font-weight:800;
+    letter-spacing:.09em;text-transform:uppercase;color:#9a8a6a;
+  }
+
+  .values{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .value{
+    appearance:none;border:1.5px solid var(--line);background:#fff;border-radius:14px;
+    padding:15px 4px;font-size:16px;font-weight:700;color:var(--ink);
+    cursor:pointer;transition:all .16s ease;font-family:inherit;
+  }
+  .value:hover{border-color:var(--gold);background:var(--gold-soft)}
+  .value.selected{
+    background:linear-gradient(180deg,#ffd76a,#f0b429);
+    border-color:var(--gold-strong);color:#3a2b00;
+    box-shadow:0 6px 16px rgba(240,180,41,.35);
+  }
+
+  .other-btn{
+    width:100%;margin-top:10px;appearance:none;cursor:pointer;font-family:inherit;
+    border:1.5px dashed #e0d3b8;background:#fffdf8;border-radius:14px;
+    padding:13px;font-size:14.5px;font-weight:650;color:#7a6a45;transition:.16s;
+  }
+  .other-btn:hover{border-color:var(--gold);color:#8a6100;background:var(--gold-soft)}
+  .other-btn.open{border-style:solid;border-color:var(--gold);background:var(--gold-soft);color:#8a6100}
+
+  .custom-wrap{display:none;margin-top:10px}
+  .custom-wrap.open{display:block;animation:fade .22s ease}
+  .custom-input{
+    display:flex;align-items:center;gap:2px;background:#fff;
+    border:1.5px solid var(--line);border-radius:14px;padding:0 14px;transition:.16s;
+  }
+  .custom-input:focus-within{border-color:var(--gold);box-shadow:0 0 0 3px rgba(240,180,41,.18)}
+  .custom-input .cur{color:var(--muted);font-weight:700;font-size:16px}
+  .custom-input input{
+    flex:1;border:0;outline:0;background:transparent;padding:14px 6px;
+    font-size:16px;font-weight:700;color:var(--ink);font-family:inherit;min-width:0;
+  }
+  .hint{font-size:12.5px;color:#a09a8c;margin:8px 2px 0}
+
+  .error{
+    display:none;margin-top:12px;padding:11px 13px;border-radius:12px;
+    background:#fff1f0;border:1px solid #ffd4cf;color:#a4241a;font-size:13.5px;font-weight:600;
+  }
+  .error.show{display:block;animation:fade .2s ease}
+
+  .btn{
+    width:100%;appearance:none;border:0;cursor:pointer;font-family:inherit;
+    border-radius:15px;padding:16px;font-size:16px;font-weight:800;
+    background:linear-gradient(180deg,#ffd76a,#f0b429);color:#3a2b00;
+    box-shadow:0 8px 20px rgba(240,180,41,.35);transition:transform .12s ease, box-shadow .16s ease;
+  }
+  .btn:hover{box-shadow:0 10px 24px rgba(240,180,41,.45)}
+  .btn:active{transform:scale(.985)}
+  .btn.ghost{
+    background:#fff;color:#6b6250;border:1.5px solid var(--line);box-shadow:none;
+    font-weight:700;font-size:15px;padding:14px;
+  }
+  .btn.ghost:hover{background:#fffdf8;border-color:#e0d3b8}
+
+  .continue-wrap{display:none;margin-top:18px}
+  .continue-wrap.show{display:block;animation:fade .28s ease}
+
+  .footnote{
+    margin-top:16px;font-size:12.5px;line-height:1.5;color:#a09a8c;text-align:center;
+  }
+  .footnote strong{color:#8a8171}
+
+  /* --- passo 2 --- */
+  .back{
+    appearance:none;background:none;border:0;cursor:pointer;font-family:inherit;
+    color:#9a8a6a;font-size:14px;font-weight:700;padding:0;margin-bottom:14px;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .back:hover{color:#8a6100}
+
+  .summary{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--gold-soft);border:1px solid #f6e2b0;border-radius:14px;
+    padding:12px 14px;margin:14px 0 6px;
+  }
+  .summary .lbl{font-size:13px;color:#7a6a45;font-weight:650}
+  .summary .amt{font-size:18px;font-weight:800;color:#8a6100}
+
+  .method{
+    border:1px solid var(--line);border-radius:16px;padding:15px;margin-top:12px;background:#fffdfa;
+  }
+  .method-head{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:800;margin-bottom:10px}
+  .method-head .ico{width:26px;height:26px;border-radius:8px;background:var(--gold-soft);display:grid;place-items:center;font-size:14px}
+
+  .row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    font-size:14.5px;padding:7px 0;
+  }
+  .row .val{font-weight:750;letter-spacing:.01em;word-break:break-all}
+  .row .sub{font-size:12px;color:var(--muted);font-weight:600}
+
+  .copy{
+    appearance:none;cursor:pointer;font-family:inherit;flex:none;
+    background:#fff;border:1.5px solid var(--line);border-radius:10px;
+    padding:7px 11px;font-size:12.5px;font-weight:750;color:#7a6a45;transition:.15s;
+  }
+  .copy:hover{border-color:var(--gold);color:#8a6100;background:var(--gold-soft)}
+  .copy.done{border-color:#bfe3c8;background:#eefaf1;color:#1d7a41}
+
+  .qr-area{display:flex;justify-content:center;margin:4px 0 6px}
+  #qrImg{
+    width:190px;height:190px;object-fit:contain;background:#fff;
+    border:1px solid var(--line);border-radius:14px;padding:8px;
+  }
+  #qrPlaceholder{
+    width:190px;height:190px;border-radius:14px;display:flex;
+    flex-direction:column;align-items:center;justify-content:center;gap:8px;
+    border:2px dashed #e0d3b8;background:
+      repeating-linear-gradient(45deg,#fffdf8,#fffdf8 9px,#fdf7ea 9px,#fdf7ea 18px);
+    color:#a09a8c;text-align:center;padding:14px;
+  }
+  #qrPlaceholder .qr-ico{font-size:26px;opacity:.55}
+  #qrPlaceholder .qr-txt{font-size:11.5px;font-weight:700;line-height:1.45;letter-spacing:.02em}
+
+  .notice{
+    margin-top:12px;padding:11px 13px;border-radius:12px;font-size:13px;line-height:1.5;
+    background:#fffdf5;border:1px dashed #e8dcc0;color:#7a6a45;
+  }
+  .notice code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:12px;background:#fff4dd;padding:1px 5px;border-radius:5px;color:#8a6100;
+  }
+  .notice.warn{background:#fff8f6;border-color:#ffd4cf;color:#a4241a}
+
+  /* --- passo 3 --- */
+  .done{text-align:center;padding:14px 4px 4px}
+  .done .heart{font-size:44px;line-height:1;margin-bottom:10px}
+  .done h2{font-size:20px;margin-bottom:8px}
+  .done p{color:var(--muted);font-size:14.5px;line-height:1.6;margin:0}
+      .done .btn{margin-top:20px}
+
+  #qrGerado{
+    padding:8px;background:#fff;border:1px solid var(--line);border-radius:14px;
+    display:flex;align-items:center;justify-content:center;min-width:190px;min-height:190px;
+  }
+  #qrGerado img, #qrGerado canvas{display:block;border-radius:8px}
+</style>
+<!-- Biblioteca que gera o QR Code localmente, sem depender de serviços externos -->
+<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@master/qrcode.min.js"></script>
+</head>
+<body>
+<div class="app">
+
+  <div class="top">
+    <div class="brand"><span class="dot">💛</span> Apoio ao meu trabalho</div>
+    <span class="badge">Opcional</span>
+  </div>
+
+  <div class="card">
+
+    <!-- ============ PASSO 1 — ESCOLHER VALOR ============ -->
+    <section class="step active" id="step1">
+      <h1>Gostou do meu trabalho? Quer deixar uma pequena gratificação?</h1>
+
+      <div class="quote">
+        "Sua avaliação já é uma grande ajuda. Se você gostou do meu atendimento e quiser apoiar
+        meu trabalho, pode deixar uma gratificação voluntária."
+      </div>
+
+      <div class="section-label">Valores sugeridos</div>
+      <div class="values" id="values"></div>
+
+      <button class="other-btn" id="otherBtn" type="button">✏️ Outro valor</button>
+
+      <div class="custom-wrap" id="customWrap">
+        <div class="custom-input">
+          <span class="cur">€</span>
+          <input id="customInput" type="text" inputmode="decimal" placeholder="Ex.: 7,50"
+                 aria-label="Outro valor de gratificação em euros">
+        </div>
+        <div class="hint">Valor mínimo de gratificação: €5.</div>
+      </div>
+
+      <div class="error" id="error" role="alert"></div>
+
+      <div class="continue-wrap" id="continueWrap">
+        <button class="btn" id="continueBtn" type="button">💛 Continuar</button>
+      </div>
+
+      <div class="footnote">
+        A gratificação é <strong>voluntária</strong> e não substitui nem condiciona o seu atendimento.
+      </div>
+    </section>
+
+    <!-- ============ PASSO 2 — MÉTODO DE PAGAMENTO ============ -->
+    <section class="step" id="step2">
+      <button class="back" id="backBtn" type="button">‹ Voltar</button>
+      <h2>Como quer pagar?</h2>
+      <p class="lead">Escolha o método que preferir. A gratificação continua a ser totalmente opcional.</p>
+
+      <div class="summary">
+        <span class="lbl">Gratificação escolhida</span>
+        <span class="amt" id="valorChip">€0</span>
+      </div>
+
+      <!-- QR Code -->
+      <div class="method">
+        <div class="method-head"><span class="ico">📱</span> QR Code de pagamento</div>
+        <div class="qr-area">
+          <img id="qrImg" alt="QR Code de pagamento" style="display:none">
+          <div id="qrGerado" style="display:none"></div>
+          <div id="qrPlaceholder">
+            <div class="qr-ico">▦</div>
+            <div class="qr-txt">ESPAÇO RESERVADO<br>PARA O SEU QR CODE</div>
+          </div>
+        </div>
+        <div class="hint" style="text-align:center">Aponte a câmara do seu banco / MB WAY para o QR Code.</div>
+      </div>
+
+      <!-- MB WAY -->
+      <div class="method" id="mbwayBlock" style="display:none">
+        <div class="method-head"><span class="ico">💳</span> MB WAY</div>
+        <div class="row">
+          <div>
+            <div class="val" id="mbwayNumero"></div>
+            <div class="sub" id="mbwayTitular"></div>
+          </div>
+          <button class="copy" type="button" data-copy="mbway">Copiar</button>
+        </div>
+      </div>
+
+      <!-- IBAN -->
+      <div class="method" id="ibanBlock" style="display:none">
+        <div class="method-head"><span class="ico">🏦</span> Transferência bancária</div>
+        <div class="row">
+          <div>
+            <div class="val" id="ibanValor"></div>
+            <div class="sub" id="ibanTitular"></div>
+          </div>
+          <button class="copy" type="button" data-copy="iban">Copiar</button>
+        </div>
+      </div>
+
+      <!-- Link de pagamento -->
+      <div class="method" id="linkBlock" style="display:none">
+        <div class="method-head"><span class="ico">🔗</span> Link de pagamento</div>
+        <a class="btn ghost" id="linkBtn" href="#" target="_blank" rel="noopener"
+           style="display:block;text-align:center;text-decoration:none">Abrir página de pagamento</a>
+      </div>
+
+      <!-- Aviso quando ainda não há dados configurados -->
+      <div class="notice warn" id="notConfigured" style="display:none">
+        <strong>Ainda não há dados de pagamento configurados nesta aplicação.</strong><br>
+        Edite apenas a secção <code>CONFIG → pagamento</code> no topo do ficheiro e cole aí o seu
+        QR Code, número MB WAY, IBAN ou link de pagamento.
+      </div>
+
+      <div class="notice" id="extraNota" style="display:none"></div>
+
+      <div style="margin-top:18px">
+        <button class="btn ghost" id="paidBtn" type="button">Já efetuei o pagamento</button>
+      </div>
+
+      <div class="footnote">
+        Não é obrigatório pagar para continuar. Se preferir, basta fechar esta janela.
+      </div>
+    </section>
+
+    <!-- ============ PASSO 3 — CONFIRMAÇÃO ============ -->
+    <section class="step" id="step3">
+      <div class="done">
+        <div class="heart">💛</div>
+        <h2>Muito obrigado!</h2>
+        <p>
+          A sua gratificação é um reconhecimento do meu trabalho — e, mais importante ainda,
+          a sua avaliação já é uma grande ajuda.
+        </p>
+        <button class="btn" id="restartBtn" type="button">Voltar ao início</button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+/* ==================================================================
+   ⚙️  CONFIGURAÇÃO — EDITE APENAS ESTA SECÇÃO
+   ------------------------------------------------------------------
+   Tudo o que diz respeito a valores e pagamento está aqui.
+   Para alterar o QR Code ou os dados bancários no futuro,
+   não precisa de mexer no resto da aplicação: basta preencher
+   os campos abaixo.
+
+   1) qrCodeImagem  → URL da imagem do seu QR Code
+                      (ex.: "img/qrcode.png") OU uma data URI
+                      (ex.: "data:image/png;base64,iVBORw0K...")
+   2) mbwayNumero   → nº de telemóvel associado ao MB WAY (ex.: "912345678")
+   3) iban          → IBAN para transferência (ex.: "PT50 0000 0000 0000 0000 0000 0")
+   4) linkPagamento → link de pagamento opcional (ex.: "https://...")
+   5) nota          → texto extra opcional mostrado no ecrã de pagamento
+   Deixe uma string vazia ("") nos campos que não quiser mostrar.
+   ================================================================== */
+const CONFIG = {
+  // Valores sugeridos (de 5 em 5, conforme definido)
+  valoresSugeridos: [5, 10, 15, 20, 25, 30],
+
+  // Regras
+  valorMinimo: 5,
+  locale: 'pt-PT',
+  moeda: 'EUR',
+  msgValorMinimo: 'O valor mínimo de gratificação é €5.',
+
+  // ---------------- DADOS DE PAGAMENTO ----------------
+  pagamento: {
+    // O seu link de pagamento Revolut — o QR Code é gerado automaticamente a partir dele
+    linkPagamento: 'https://revolut.me/thiago_afonso',
+
+    // Conteúdo do QR Code. Deixe vazio ('') para usar o linkPagamento acima.
+    qrConteudo: '',
+
+    // Se preferir usar uma imagem de QR Code já pronta (em vez de gerada),
+    // cole aqui o URL ou uma data URI. Se preenchido, tem prioridade.
+    qrCodeImagem: '',
+
+    // MB WAY (opcional — deixe vazio para não aparecer)
+    mbwayNumero: '',
+    mbwayTitular: '',
+
+    // Transferência bancária (opcional — deixe vazio para não aparecer)
+    iban: '',
+    ibanTitular: '',
+
+    // Texto extra opcional mostrado no ecrã de pagamento
+    nota: ''
+  }
+};
+/* ==============  FIM DA CONFIGURAÇÃO  ============== */
+
+
+/* ------------------------------------------------------------------
+   Suporte opcional a parâmetros de URL (não é preciso mexer aqui):
+   ?qr=...  ?mbway=...  ?iban=...  ?titular=...  ?link=...
+   Permite trocar os dados de pagamento sem sequer editar o ficheiro.
+   ------------------------------------------------------------------ */
+(function aplicarParametrosURL(){
+  let qs;
+  try { qs = new URLSearchParams(window.location.search); } catch(e){ return; }
+  const p = CONFIG.pagamento;
+  if (qs.get('qr'))      p.qrCodeImagem = qs.get('qr');
+  if (qs.get('mbway'))   p.mbwayNumero = qs.get('mbway');
+  if (qs.get('iban'))    p.iban = qs.get('iban');
+  if (qs.get('link'))    p.linkPagamento = qs.get('link');
+  if (qs.get('titular')) { p.mbwayTitular = qs.get('titular'); p.ibanTitular = qs.get('titular'); }
+})();
+
+const $ = (id) => document.getElementById(id);
+
+/* Estado da aplicação */
+const estado = { valor: null };
+
+/* Formatação de moeda (pt-PT) */
+function moeda(v){
+  return new Intl.NumberFormat(CONFIG.locale, { style:'currency', currency:CONFIG.moeda }).format(v);
+}
+/* Rótulo compacto para os botões: €5, €10, ... */
+function rotulo(v){ return Number.isInteger(v) ? '€' + v : moeda(v); }
+
+/* Navegação entre passos */
+function irPara(id){
+  document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+
+/* ------------------------------------------------------------------
+   PASSO 1 — valores sugeridos
+   ------------------------------------------------------------------ */
+CONFIG.valoresSugeridos.forEach(v => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'value';
+  b.textContent = rotulo(v);
+  b.dataset.valor = v;
+  b.setAttribute('aria-pressed', 'false');
+  b.addEventListener('click', () => selecionarSugerido(v, b));
+  $('values').appendChild(b);
+});
+
+function limparSelecao(){
+  document.querySelectorAll('.value').forEach(el => {
+    el.classList.remove('selected');
+    el.setAttribute('aria-pressed','false');
+  });
+}
+
+function esconderErro(){ $('error').classList.remove('show'); }
+function mostrarErro(msg){ $('error').textContent = msg; $('error').classList.add('show'); }
+function mostrarContinuar(sim){ $('continueWrap').classList.toggle('show', !!sim); }
+
+/* Seleciona um valor sugerido */
+function selecionarSugerido(v, btn){
+  limparSelecao();
+  if (btn) { btn.classList.add('selected'); btn.setAttribute('aria-pressed','true'); }
+  estado.valor = v;
+  esconderErro();
+  $('customInput').value = '';
+  $('otherBtn').classList.remove('open');
+  $('customWrap').classList.remove('open');
+  mostrarContinuar(true);
+}
+
+/* Botão "Outro valor" */
+$('otherBtn').addEventListener('click', () => {
+  const aberto = $('customWrap').classList.toggle('open');
+  $('otherBtn').classList.toggle('open', aberto);
+  if (aberto){
+    limparSelecao();
+    estado.valor = null;
+    mostrarContinuar(false);
+    esconderErro();
+    setTimeout(() => $('customInput').focus(), 60);
+  } else {
+    esconderErro();
+    mostrarContinuar(false);
+  }
+});
+
+/* Campo de valor personalizado */
+function interpretarValor(texto){
+  const limpo = String(texto).replace(/\./g,'').replace(',', '.').replace(/[^\d.]/g,'');
+  if (limpo === '' ) return NaN;
+  return parseFloat(limpo);
+}
+
+$('customInput').addEventListener('input', (e) => {
+  const bruto = e.target.value;
+  // se o utilizador escrever "7.50" (ponto), tratamos igualmente
+  const normalizado = bruto.replace(/\.(?=\d{1,2}$)/, ',');
+  const v = interpretarValor(normalizado);
+
+  if (isNaN(v)){
+    esconderErro();
+    estado.valor = null;
+    mostrarContinuar(false);
+    return;
+  }
+  if (v < CONFIG.valorMinimo){
+    mostrarErro(CONFIG.msgValorMinimo);
+    estado.valor = null;
+    mostrarContinuar(false);
+    return;
+  }
+  esconderErro();
+  estado.valor = Math.round(v * 100) / 100;
+  mostrarContinuar(true);
+});
+
+$('customInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && estado.valor){
+    e.preventDefault();
+    irParaPagamento();
+  }
+});
+
+/* Continuar → passo 2 */
+$('continueBtn').addEventListener('click', irParaPagamento);
+
+function irParaPagamento(){
+  if (!estado.valor || estado.valor < CONFIG.valorMinimo){
+    mostrarErro(CONFIG.msgValorMinimo);
+    return;
+  }
+  renderizarPagamento();
+  irPara('step2');
+}
+
+/* ------------------------------------------------------------------
+   PASSO 2 — método de pagamento (lê sempre da CONFIG)
+   ------------------------------------------------------------------ */
+function renderizarPagamento(){
+  const p = CONFIG.pagamento;
+  $('valorChip').textContent = moeda(estado.valor);
+
+  /* QR Code — imagem própria, QR gerado a partir do link, ou espaço reservado */
+  const img = $('qrImg'), ph = $('qrPlaceholder'), gen = $('qrGerado');
+  img.style.display = 'none';
+  gen.style.display = 'none';
+  gen.innerHTML = '';
+  ph.style.display = 'none';
+
+  const conteudoQR = (p.qrConteudo || p.linkPagamento || '').trim();
+
+  if (p.qrCodeImagem){
+    // 1) QR Code em imagem, fornecido por si
+    img.src = p.qrCodeImagem;
+    img.style.display = 'block';
+  } else if (conteudoQR && typeof QRCode !== 'undefined'){
+    // 2) QR Code gerado automaticamente a partir do link de pagamento
+    new QRCode(gen, {
+      text: conteudoQR,
+      width: 190,
+      height: 190,
+      colorDark: '#111827',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    gen.style.display = 'flex';
+  } else if (conteudoQR){
+    // 3) Sem biblioteca disponível: mostra a indicação para usar o link
+    gen.innerHTML = '<div style="font-size:12.5px;color:#7a6a45;text-align:center;padding:18px;line-height:1.5">'
+      + 'QR Code indisponível neste momento.<br>Use o botão de link de pagamento abaixo.</div>';
+    gen.style.display = 'flex';
+  } else {
+    // 4) Nada configurado: espaço reservado
+    ph.style.display = 'flex';
+  }
+
+  /* MB WAY */
+  if (p.mbwayNumero){
+    $('mbwayBlock').style.display = 'block';
+    $('mbwayNumero').textContent = p.mbwayNumero;
+    $('mbwayTitular').textContent = p.mbwayTitular || '';
+  } else {
+    $('mbwayBlock').style.display = 'none';
+  }
+
+  /* IBAN */
+  if (p.iban){
+    $('ibanBlock').style.display = 'block';
+    $('ibanValor').textContent = p.iban;
+    $('ibanTitular').textContent = p.ibanTitular || '';
+  } else {
+    $('ibanBlock').style.display = 'none';
+  }
+
+  /* Link */
+  if (p.linkPagamento){
+    $('linkBlock').style.display = 'block';
+    $('linkBtn').href = p.linkPagamento;
+  } else {
+    $('linkBlock').style.display = 'none';
+  }
+
+  /* Nota extra */
+  if (p.nota){
+    $('extraNota').style.display = 'block';
+    $('extraNota').textContent = p.nota;
+  } else {
+    $('extraNota').style.display = 'none';
+  }
+
+  /* Aviso se nada estiver configurado */
+  const configurado = !!(p.qrCodeImagem || p.mbwayNumero || p.iban || p.linkPagamento);
+  $('notConfigured').style.display = configurado ? 'none' : 'block';
+}
+
+/* Copiar dados (MB WAY / IBAN) */
+document.querySelectorAll('.copy').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const tipo = btn.dataset.copy;
+    const texto = tipo === 'mbway' ? CONFIG.pagamento.mbwayNumero : CONFIG.pagamento.iban;
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(texto);
+      } else {
+        copiaAlternativa(texto);
+      }
+    } catch(e){
+      copiaAlternativa(texto);
+    }
+    btn.textContent = 'Copiado ✓';
+    btn.classList.add('done');
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('done'); }, 1800);
+  });
+});
+
+function copiaAlternativa(texto){
+  const ta = document.createElement('textarea');
+  ta.value = texto;
+  ta.setAttribute('readonly','');
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); } catch(e){}
+  document.body.removeChild(ta);
+}
+
+/* Voltar / concluir */
+$('backBtn').addEventListener('click', () => irPara('step1'));
+$('paidBtn').addEventListener('click', () => irPara('step3'));
+$('restartBtn').addEventListener('click', () => {
+  estado.valor = null;
+  limparSelecao();
+  esconderErro();
+  mostrarContinuar(false);
+  $('customInput').value = '';
+  $('otherBtn').classList.remove('open');
+  $('customWrap').classList.remove('open');
+  irPara('step1');
+});
+</script>
+</body>
+</html>
