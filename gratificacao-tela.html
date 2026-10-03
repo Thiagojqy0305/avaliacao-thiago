@@ -185,6 +185,12 @@
   #qrPlaceholder .qr-ico{font-size:26px;opacity:.55}
   #qrPlaceholder .qr-txt{font-size:11.5px;font-weight:700;line-height:1.45;letter-spacing:.02em}
 
+  #qrGerado{
+    padding:8px;background:#fff;border:1px solid var(--line);border-radius:14px;
+    display:flex;align-items:center;justify-content:center;min-width:190px;min-height:190px;
+  }
+  #qrGerado img, #qrGerado canvas{display:block;border-radius:8px}
+
   .notice{
     margin-top:12px;padding:11px 13px;border-radius:12px;font-size:13px;line-height:1.5;
     background:#fffdf5;border:1px dashed #e8dcc0;color:#7a6a45;
@@ -200,16 +206,10 @@
   .done .heart{font-size:44px;line-height:1;margin-bottom:10px}
   .done h2{font-size:20px;margin-bottom:8px}
   .done p{color:var(--muted);font-size:14.5px;line-height:1.6;margin:0}
-      .done .btn{margin-top:20px}
-
-  #qrGerado{
-    padding:8px;background:#fff;border:1px solid var(--line);border-radius:14px;
-    display:flex;align-items:center;justify-content:center;min-width:190px;min-height:190px;
-  }
-  #qrGerado img, #qrGerado canvas{display:block;border-radius:8px}
+  .done .btn{margin-top:20px}
 </style>
-<!-- Biblioteca que gera o QR Code localmente, sem depender de serviços externos -->
-<script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs@master/qrcode.min.js"></script>
+<!-- Biblioteca que gera o QR Code localmente no browser (versão fixa do CDN) -->
+<script src="https://cdn.jsdelivr.net/npm/davidshimjs-qrcodejs@0.0.2/qrcode.min.js"></script>
 </head>
 <body>
 <div class="app">
@@ -277,7 +277,7 @@
             <div class="qr-txt">ESPAÇO RESERVADO<br>PARA O SEU QR CODE</div>
           </div>
         </div>
-        <div class="hint" style="text-align:center">Aponte a câmara do seu banco / MB WAY para o QR Code.</div>
+        <div class="hint" style="text-align:center">Aponte a câmara do seu banco, do MB WAY ou da app Revolut para o QR Code.</div>
       </div>
 
       <!-- MB WAY -->
@@ -354,13 +354,17 @@
    não precisa de mexer no resto da aplicação: basta preencher
    os campos abaixo.
 
-   1) qrCodeImagem  → URL da imagem do seu QR Code
-                      (ex.: "img/qrcode.png") OU uma data URI
-                      (ex.: "data:image/png;base64,iVBORw0K...")
-   2) mbwayNumero   → nº de telemóvel associado ao MB WAY (ex.: "912345678")
-   3) iban          → IBAN para transferência (ex.: "PT50 0000 0000 0000 0000 0000 0")
-   4) linkPagamento → link de pagamento opcional (ex.: "https://...")
-   5) nota          → texto extra opcional mostrado no ecrã de pagamento
+   1) linkPagamento → link de pagamento (já preenchido com o seu Revolut).
+                      Serve também de conteúdo para o QR Code.
+   2) qrConteudo    → conteúdo do QR Code. Vazio = usa o linkPagamento.
+   3) qrCodeImagem  → se preferir um QR Code já pronto em imagem, cole aqui
+                      o URL (ex.: "img/qrcode.png") ou uma data URI
+                      (ex.: "data:image/png;base64,iVBORw0K...").
+                      Se preenchido, tem prioridade sobre o QR gerado.
+   4) mbwayNumero   → nº de telemóvel associado ao MB WAY (ex.: "912345678")
+   5) iban          → IBAN para transferência (ex.: "PT50 0000 0000 0000 0000 0000 0")
+   6) nota          → texto extra opcional mostrado no ecrã de pagamento
+
    Deixe uma string vazia ("") nos campos que não quiser mostrar.
    ================================================================== */
 const CONFIG = {
@@ -569,10 +573,10 @@ function renderizarPagamento(){
     });
     gen.style.display = 'flex';
   } else if (conteudoQR){
-    // 3) Sem biblioteca disponível: mostra a indicação para usar o link
-    gen.innerHTML = '<div style="font-size:12.5px;color:#7a6a45;text-align:center;padding:18px;line-height:1.5">'
-      + 'QR Code indisponível neste momento.<br>Use o botão de link de pagamento abaixo.</div>';
-    gen.style.display = 'flex';
+    // 3) Biblioteca indisponível: gera o QR através de um serviço de imagem
+    img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=380x380&margin=10&data='
+            + encodeURIComponent(conteudoQR);
+    img.style.display = 'block';
   } else {
     // 4) Nada configurado: espaço reservado
     ph.style.display = 'flex';
