@@ -11,4 +11,4 @@ tags:
 
 # Tela de Gratificação (opcional)
 
-Built with [HuggingChat](https://huggingface.co/chat).
+
